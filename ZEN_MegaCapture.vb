@@ -276,6 +276,31 @@ EndLabel:
 '    End If
                 
 End Sub
+
+Private Sub AutoOffset_Click()
+    If AutoOffset Then
+        XOffsetText.Enabled = False
+        YOffsetText.Enabled = False
+        ZOffsetText.Enabled = False
+        XOffsetSpin.Enabled = False
+        YOffsetSpin.Enabled = False
+        ZOffsetSpin.Enabled = False
+        XOffsetText.BackColor = &H80000013
+        YOffsetText.BackColor = &H80000013
+        ZOffsetText.BackColor = &H80000013
+    Else
+        XOffsetText.Enabled = True
+        YOffsetText.Enabled = True
+        ZOffsetText.Enabled = True
+        XOffsetSpin.Enabled = True
+        YOffsetSpin.Enabled = True
+        ZOffsetSpin.Enabled = True
+        XOffsetText.BackColor = &H8000000F
+        YOffsetText.BackColor = &H8000000F
+        ZOffsetText.BackColor = &H8000000F
+    End If
+End Sub
+
 Private Sub BrowseButton_Click()
     Dim FolderName As String
     FolderName = GetFolderName("Select a folder")
@@ -285,6 +310,10 @@ Private Sub BrowseButton_Click()
     If retval <> "" Then
         MsgBox "This folder already contains files.  You should consider using an empty folder!"
     End If
+End Sub
+
+Private Sub CheckBox1_Click()
+
 End Sub
 
 Private Sub ColumnsOfSpecimensSpin_Change()
@@ -747,7 +776,7 @@ End Sub
 'Sub because I don't want it to return a value.  Will need to use Call when calling this Sub
 Public Sub AcquireTiledZStack(xPos As Double, yPos As Double, zPos As Double)
     sTab = Chr(9) 'tab
-    
+    Dim zInd As Integer
     'Capture y tiles per specimen
     For YTilesIndex = 0 To YTilesPerSpecimenText - 1
         'Capture x tiles per specimen
@@ -923,33 +952,33 @@ Public Sub AcquireTiledZStack(xPos As Double, yPos As Double, zPos As Double)
             'Set strFilename so can export next round
             'Export z-stack in format "prefix-pPPPcCCrRRyYYxXXtTTTTzZZZ
             'p is for plate number but can't switch plates on cyclops
-            If MarkAndFind Then
-                strFilename = PathOfFolderForImagesText _
-                  + "Location" _
-                  + CStr(FolderIndex) _
-                  + "\" _
-                  + FilenamePrefixText _
-                  + "-PL00" _
-                  + "-CO" + Format(SpecimenPositionIndex, "00") _
-                  + "-RO" + Format(0, "00") _
-                  + "-ZT00" _
-                  + "-YT" + Format(YTilesIndex, "00") _
-                  + "-XT" + Format(XTilesIndex, "00") _
-                  + "-TM" + Format(TimeIndex, "0000")
-            Else
-                strFilename = PathOfFolderForImagesText _
-                  + "Location" _
-                  + CStr(FolderIndex) _
-                  + "\" _
-                  + FilenamePrefixText _
-                  + "-PL00" _
-                  + "-CO" + Format(SpecimenColumnIndex, "00") _
-                  + "-RO" + Format(SpecimenRowIndex, "00") _
-                  + "-ZT00" _
-                  + "-YT" + Format(YTilesIndex, "00") _
-                  + "-XT" + Format(XTilesIndex, "00") _
-                  + "-TM" + Format(TimeIndex, "0000")
-            End If
+'            If MarkAndFind Then
+'                strFilename = PathOfFolderForImagesText _
+'                  + "Location" _
+'                  + CStr(FolderIndex) _
+'                  + "\" _
+'                  + FilenamePrefixText _
+'                  + "-PL00" _
+'                  + "-CO" + Format(SpecimenPositionIndex, "00") _
+'                  + "-RO" + Format(0, "00") _
+'                  + "-ZT00" _
+'                  + "-YT" + Format(YTilesIndex, "00") _
+'                  + "-XT" + Format(XTilesIndex, "00") _
+'                  + "-TM" + Format(TimeIndex, "0000")
+'            Else
+'                strFilename = PathOfFolderForImagesText _
+'                  + "Location" _
+'                  + CStr(FolderIndex) _
+'                  + "\" _
+'                  + FilenamePrefixText _
+'                  + "-PL00" _
+'                  + "-CO" + Format(SpecimenColumnIndex, "00") _
+'                  + "-RO" + Format(SpecimenRowIndex, "00") _
+'                  + "-ZT00" _
+'                  + "-YT" + Format(YTilesIndex, "00") _
+'                  + "-XT" + Format(XTilesIndex, "00") _
+'                  + "-TM" + Format(TimeIndex, "0000")
+'            End If
             
             'Capture each z-stack
             For zInd = 0 To NumberOfZSlicesText - 1
@@ -987,11 +1016,18 @@ Public Sub AcquireTiledZStack(xPos As Double, yPos As Double, zPos As Double)
                 'Will conver to PNG files later if desired
                 Dim strName As String
                 For channel = 0 To RecordingDoc.GetDimensionChannels - 1
-                    strName = strFilename + "-CH" + Format(channel, "00") + "-ZS"
-                    Success = RecordingDoc.Export(nExportType, strName + Format(zInd, "0000") + ".tif", True, False, 0, 0, True, channel, channel, channel)
+                    Call GenerateFilename(strName, MarkAndFind, PathOfFolderForImagesText, FolderIndex, FilenamePrefixText, _
+                                    SpecimenPositionIndex, SpecimenColumnIndex, SpecimenRowIndex, YTilesIndex, _
+                                    XTilesIndex, TimeIndex, channel, zInd, ".tif")
+                    'strName = strFilename + "-CH" + Format(channel, "00") + "-ZS"
+                    'Success = RecordingDoc.Export(nExportType, strName + Format(zInd, "0000") + ".tif", True, False, 0, 0, True, channel, channel, channel)
+                    Success = RecordingDoc.Export(nExportType, strName, True, False, 0, 0, True, channel, channel, channel)
                     'TODO getting grayscale tifs
 
-                    strName = strFilename + "-CH" + Format(channel, "00") + "-ZS" + Format(zInd, "0000") + strExtension
+                    'strName = strFilename + "-CH" + Format(channel, "00") + "-ZS" + Format(zInd, "0000") + strExtension
+                    Call GenerateFilename(strName, MarkAndFind, PathOfFolderForImagesText, FolderIndex, FilenamePrefixText, _
+                                    SpecimenPositionIndex, SpecimenColumnIndex, SpecimenRowIndex, YTilesIndex, _
+                                    XTilesIndex, TimeIndex, channel, zInd, strExtension)
                     'has to be done in two separate lines like this so that images will be .tif at first no matter what
                     
                     Print #intOutFileMeg, "<Image>"
@@ -1037,6 +1073,60 @@ Public Sub AcquireTiledZStack(xPos As Double, yPos As Double, zPos As Double)
     Print #intOutFileUsr, ""
                 
 End Sub
+
+Public Sub GenerateFilename(ByRef io_strFilename As String, _
+                            ByVal i_MarkAndFind As Boolean, _
+                            i_PathOfFolderForImagesText As String, _
+                            i_FolderIndex As Integer, _
+                            i_FilenamePrefixText As String, _
+                            i_SpecimenPositionIndex As Integer, _
+                            i_SpecimenColumnIndex As Integer, _
+                            i_SpecimenRowIndex As Integer, _
+                            i_YTilesIndex As Integer, _
+                            i_XTilesIndex As Integer, _
+                            i_TimeIndex As Integer, _
+                            i_channel As Integer, _
+                            i_zInd As Integer, _
+                            i_strExtension As String)
+
+    If i_MarkAndFind Then
+        io_strFilename = i_PathOfFolderForImagesText _
+          + "Location" _
+          + CStr(i_FolderIndex) _
+          + "\" _
+          + i_FilenamePrefixText _
+          + "-PL00" _
+          + "-CO" + Format(i_SpecimenPositionIndex, "00") _
+          + "-RO" + Format(0, "00") _
+          + "-ZT00" _
+          + "-YT" + Format(i_YTilesIndex, "00") _
+          + "-XT" + Format(i_XTilesIndex, "00") _
+          + "-TM" + Format(i_TimeIndex, "0000") _
+          + "-CH" + Format(i_channel, "00") _
+          + "-ZS" + Format(i_zInd, "0000") + i_strExtension
+            
+    Else
+        io_strFilename = i_PathOfFolderForImagesText _
+          + "Location" _
+          + CStr(i_FolderIndex) _
+          + "\" _
+          + i_FilenamePrefixText _
+          + "-PL00" _
+          + "-CO" + Format(i_SpecimenColumnIndex, "00") _
+          + "-RO" + Format(i_SpecimenRowIndex, "00") _
+          + "-ZT00" _
+          + "-YT" + Format(i_YTilesIndex, "00") _
+          + "-XT" + Format(i_XTilesIndex, "00") _
+          + "-TM" + Format(i_TimeIndex, "0000") _
+          + "-CH" + Format(i_channel, "00") _
+          + "-ZS" + Format(i_zInd, "0000") + i_strExtension
+          
+    End If
+End Sub
+                                    
+
+
+
 
 Public Function GetMarkedLocations(MyXpos() As Double, MyYpos() As Double, MyZpos() As Double) As Long
    Dim idx As Long
