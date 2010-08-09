@@ -1,0 +1,1 @@
+Regsitration : filename parsing : give a range of picture, give the variable as %N in the filename for instance.
